@@ -1,0 +1,130 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chore List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-4">
+    <h1>Chore List</h1>
+    
+    <!-- Filter Form -->
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-auto">
+            <label for="frequency" class="form-label">Frequency</label>
+            <select name="frequency" id="frequency" class="form-select">
+                <option value="">All</option>
+                {% for freq in frequencies %}
+                <option value="{{ freq.0 }}" {% if freq.0 == current_filters.frequency %}selected{% endif %}>
+                    {{ freq.1 }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <label for="assignee" class="form-label">Assignee</label>
+            <select name="assignee" id="assignee" class="form-select">
+                <option value="">All</option>
+                {% for assignee in assignees %}
+                <option value="{{ assignee.id }}" {% if assignee.id|stringformat:"s" == current_filters.assignee %}selected{% endif %}>
+                    {{ assignee.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <label for="room" class="form-label">Room</label>
+            <select name="room" id="room" class="form-select">
+                <option value="">All</option>
+                {% for room in rooms %}
+                <option value="{{ room.id }}" {% if room.id|stringformat:"s" == current_filters.room %}selected{% endif %}>
+                    {{ room.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-auto">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" id="status" class="form-select">
+                <option value="">All</option>
+                <option value="true" {% if current_filters.status == 'true' %}selected{% endif %}>Completed</option>
+                <option value="false" {% if current_filters.status == 'false' %}selected{% endif %}>Pending</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{% url 'chore_list' %}" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+    
+    <!-- Chore List Table -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Frequency</th>
+                <th>Room</th>
+                <th>Assignee</th>
+                <th>Due Date</th>
+                <th>Completed</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for chore in chores %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ chore.name }}</td>
+                <td>{{ chore.description|truncatewords:10 }}</td>
+                <td>{{ chore.get_frequency_display }}</td>
+                <td>{{ chore.room|default:"-" }}</td>
+                <td>{{ chore.assigned_to|default:"-" }}</td>
+                <td>{{ chore.due_date }}</td>
+                <td>
+                    {% if chore.completed %}
+                        <span class="badge bg-success">Yes</span>
+                    {% else %}
+                        <span class="badge bg-danger">No</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">No chores found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">First</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Next</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ paginator.num_pages }}{% if request.GET.urlencode %}&{{ request.GET.urlencode }}{% endif %}">Last</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+</body>
+</html>
